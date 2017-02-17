@@ -21,20 +21,46 @@
                                 <span class="glyphicon glyphicon-align-justify"></span> List View
                             </a>
                         </li>
+                        <li class="toolbar-item">
+                            <a (click)="changeDisplayMode(displayModeEnum.Map)" [class.active]="displayMode === displayModeEnum.Map">
+                                <span class="glyphicon glyphicon-map-marker"></span> Map View
+                            </a>
+                        </li>
+                        <li class="toolbar-item">
+                            <a routerLink="/customers/0/edit">
+                                <span class="glyphicon glyphicon-plus"></span> New Customer
+                            </a>
+                        </li>
                     </ul>
-                    <filter-textbox class="navbar-right"
-                     (changed)="filterChanged($event)"></filter-textbox>
+                    <cm-filter-textbox class="navbar-right"
+                     (changed)="filterChanged($event)"></cm-filter-textbox>
                 </div>
             </div>
         </div>
         
-        <customers-card 
+        <cm-customers-card 
           [customers]="filteredCustomers" 
-          [hidden]="displayMode !== displayModeEnum.Card"></customers-card>
+          [hidden]="displayMode !== displayModeEnum.Card"></cm-customers-card>
     
-        <customers-grid 
+        <cm-customers-grid 
           [customers]="filteredCustomers" 
-          [hidden]="displayMode !== displayModeEnum.Grid"></customers-grid>
+          [hidden]="displayMode !== displayModeEnum.Grid"></cm-customers-grid>
+
+        <cm-map *ngIf="filteredCustomers.length" 
+            [zoom]="2" 
+            [enabled]="displayMode === displayModeEnum.Map" 
+            [hidden]="displayMode !== displayModeEnum.Map">
+          <cm-map-point 
+            *ngFor="let customer of filteredCustomers" 
+            [latitude]="customer.latitude" 
+            [longitude]="customer.longitude"
+            [markerText]="'<h3>' + customer.firstName + ' ' + customer.lastName + '</a></h3>' + customer.city + ', ' + customer.state.name"></cm-map-point>
+        </cm-map>
+
+        <cm-pagination
+            [totalItems]="totalRecords" 
+            [pageSize]="pageSize" 
+            (pageChanged)="pageChanged($event)"></cm-pagination>
           
     </div>
 </div>

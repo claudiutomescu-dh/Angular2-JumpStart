@@ -2,6 +2,12 @@
 {
     "files.exclude": {
       "**/app/**/*.js.map": true,
-      "**/app/**/*.js": true
-    }
+      "**/app/**/*.js": true,
+      
+      "**/config/*.js.map": true,
+      "**/config/*.js": {
+        "when": "$(basename).js.map"
+      }
+    },
+    "typescript.check.tscVersion": false
 }

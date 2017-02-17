@@ -1,19 +1,13 @@
 import { Component, OnInit } from '@angular/core';
-import { ROUTER_DIRECTIVES } from '@angular/router';
-//import { Observable } from 'rxjs/Observable';
 
-import { DataService } from '../shared/services/data.service';
-import { FilterTextboxComponent } from '../filterTextbox/filterTextbox.component';
-import { CustomersCardComponent } from './customersCard.component';
-import { CustomersGridComponent } from './customersGrid.component'
-import { ICustomer, IOrder } from '../shared/interfaces';
+import { DataService } from '../core/services/data.service';
+import { ICustomer, IPagedResults } from '../shared/interfaces';
+import { FilterService } from '../core/services/filter.service';
 
 @Component({ 
   moduleId: module.id,
-  selector: 'customers', 
-  templateUrl: 'customers.component.html',
-  directives: [ROUTER_DIRECTIVES, FilterTextboxComponent, 
-               CustomersCardComponent, CustomersGridComponent]
+  selector: 'cm-customers', 
+  templateUrl: 'customers.component.html'
 })
 export class CustomersComponent implements OnInit {
 
@@ -23,47 +17,47 @@ export class CustomersComponent implements OnInit {
   filteredCustomers: ICustomer[] = [];
   displayMode: DisplayModeEnum;
   displayModeEnum = DisplayModeEnum;
+  totalRecords: number = 0;
+  pageSize: number = 10;
 
-  constructor(private dataService: DataService) { }
+  constructor(private dataService: DataService, private filterService: FilterService) { }
   
   ngOnInit() {
     this.title = 'Customers';
     this.filterText = 'Filter Customers:';
     this.displayMode = DisplayModeEnum.Card;
 
-    this.dataService.getCustomers()
-        .subscribe((customers: ICustomer[]) => {
-          this.customers = this.filteredCustomers = customers;
-        });
-
+    this.getCustomersPage(1);
   }
 
   changeDisplayMode(mode: DisplayModeEnum) {
       this.displayMode = mode;
   }
 
+  pageChanged(page: number) {
+    this.getCustomersPage(page);
+  }
+
+  getCustomersPage(page: number) {
+    this.dataService.getCustomersPage((page - 1) * this.pageSize, this.pageSize)
+        .subscribe((response: IPagedResults<ICustomer[]>) => {
+          this.customers = this.filteredCustomers = response.results;
+          this.totalRecords = response.totalRecords;
+        },
+        (err: any) => console.log(err),
+        () => console.log('getCustomersPage() retrieved customers for page: ' + page));
+  }
+
   filterChanged(data: string) {
     if (data && this.customers) {
         data = data.toUpperCase();
-        let props = ['firstName', 'lastName', 'address', 'city', 'orderTotal'];
-        let filtered = this.customers.filter(item => {
-            let match = false;
-            for (let prop of props) {
-                //console.log(item[prop] + ' ' + item[prop].toUpperCase().indexOf(data));
-                if (item[prop].toString().toUpperCase().indexOf(data) > -1) {
-                  match = true;
-                  break;
-                }
-            };
-            return match;
-        });
-        this.filteredCustomers = filtered;
+        const props = ['firstName', 'lastName', 'city', 'state.name'];
+        this.filteredCustomers = this.filterService.filter<ICustomer>(this.customers, data, props);
     }
     else {
       this.filteredCustomers = this.customers;
     }
   }
-
 }
 
 enum DisplayModeEnum {
